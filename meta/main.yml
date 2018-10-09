@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: SenseiCoder and Evens SOLIGNAC
+  description: Ansible role to mount an encrypted mount using cryptsetup
+  licence: MIT
+  min_ansible_version: 1.9
+
+  platforms:
+    - name: Ubuntu
+      versions: all
+    - name: Debian
+      versions: all
+
+  categories:
+    - system
+    - security
+
+  dependencies: []
+...

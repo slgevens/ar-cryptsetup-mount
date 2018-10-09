@@ -1,0 +1,75 @@
+---
+- block:
+  - name: Get device
+    shell: "cat /etc/crypttab | grep ^{{ name }} | awk '{print $2}'"
+    register: device
+    changed_when: false
+  - name: Check if partition is already encrypted
+    shell: "/sbin/cryptsetup status {{ name }}"
+    become: true
+    register: out_cryptsetupstatus
+    failed_when: false
+    changed_when: false    
+  - debug: var=out_cryptsetupstatus
+  - name: Decrypt the partition using passphrase
+    shell: "echo \"{{ passphrase }}\" | /sbin/cryptsetup open --type luks {{ device.stdout }} {{ name }}"
+    become: true
+    no_log: true
+    when: out_cryptsetupstatus.rc != 0  
+  when: name is defined
+
+- block:
+  - name: Get swap
+    shell: "cat /etc/crypttab | grep ^swap | awk '{print $2}'"
+    register: swapdev
+    changed_when: false
+  - name: Check if swap is already encrypted
+    shell: "/sbin/cryptsetup status swap"
+    become: true
+    register: out_cryptswap
+    failed_when: false
+    changed_when: false    
+  - debug: var=out_cryptswap
+  - name: Decrypt the swap partition using passphrase
+    shell: "echo \"{{ passphrase }}\" | /sbin/cryptsetup open --type luks {{ swapdev.stdout }} swap"
+    become: true
+    no_log: true
+    when: out_cryptswap.rc != 0
+  - name: Turning on swap
+    command: /sbin/swapon /dev/mapper/swap
+  when: swap is defined
+
+- block:
+  - name: Check if partition is already mounted
+    shell: "mount | grep '{{ mountpoint }}'"
+    args:
+      warn: false
+    register: out_partmounted
+    failed_when: false
+    changed_when: false
+
+  - name: fsck
+    shell: "fsck -n {{ mountpoint }}"
+    become: true
+    register: out_fsck
+    changed_when: false
+    failed_when: false
+    when: out_partmounted.rc != 0
+
+  - name: fsck result
+    debug: var=out_fsck.stdout_lines
+    when: out_fsck.stdout_lines is defined
+
+  - name: Mount partition
+    shell: "mount {{ mountpoint }}"
+    args:
+      warn: false
+    become: true
+    when: out_partmounted.rc != 0
+
+  - name: Check mountpoint
+    shell: "ls {{ mountpoint }}"
+    register: ls_mountpoint
+
+  - debug: var=ls_mountpoint.stdout_lines
+  when: mountpoint is defined
