@@ -1,5 +1,5 @@
 ---
-name: space
+partitionname: space
 mountpoint: "/space"
 passphrase: "{{ vault_cryptdisk }}"
 
