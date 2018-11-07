@@ -16,8 +16,7 @@
     become: true
     no_log: true
     when: out_cryptsetupstatus.rc != 0  
-  when: name is defined
-
+  when: partition_name is defined
 
 - block:
   - name: Get swap
