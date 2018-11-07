@@ -1,22 +1,23 @@
 ---
 - block:
   - name: Get device
-    shell: "cat /etc/crypttab | grep ^{{ partion_name }} | awk '{print $2}'"
+    shell: "cat /etc/crypttab | grep ^{{ partition_name }} | awk '{print $2}'"
     register: device
     changed_when: false
   - name: Check if partition is already encrypted
-    shell: "/sbin/cryptsetup status {{ partion_name }}"
+    shell: "/sbin/cryptsetup status {{ partition_name }}"
     become: true
     register: out_cryptsetupstatus
     failed_when: false
     changed_when: false    
   - debug: var=out_cryptsetupstatus
   - name: Decrypt the partition using passphrase
-    shell: "echo \"{{ passphrase }}\" | /sbin/cryptsetup open --type luks {{ device.stdout }} {{ partion_name }}"
+    shell: "echo \"{{ passphrase }}\" | /sbin/cryptsetup open --type luks {{ device.stdout }} {{ partition_name }}"
     become: true
     no_log: true
     when: out_cryptsetupstatus.rc != 0  
   when: name is defined
+
 
 - block:
   - name: Get swap
